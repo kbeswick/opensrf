@@ -5,13 +5,13 @@
 osrfMessage *o;
 
 //Set up the test fixture
-void setup (void)
+void setup(void)
 {
   o = osrf_message_init(CONNECT, 1, 1);
 }
 
 //Clean up the test fixture
-void teardown (void)
+void teardown(void)
 {
   osrfMessageFree(o);
 }
@@ -59,7 +59,7 @@ END_TEST
 
 //END Tests
 
-Suite *osrf_message_suite (void)
+Suite *osrf_message_suite(void)
 {
   //Create test suite, test case, initialize fixture
   Suite *s = suite_create("osrf_message");
@@ -80,7 +80,7 @@ Suite *osrf_message_suite (void)
   return s;
 }
 
-void run_tests (SRunner *sr)
+void run_tests(SRunner *sr)
 {
-  srunner_add_suite (sr, osrf_message_suite());
+  srunner_add_suite(sr, osrf_message_suite());
 }
