@@ -3,11 +3,23 @@
 
 osrfList *testOsrfList;
 
+//Keep track of how many items have been freed using osrfCustomListFree
+unsigned int freedItemsSize;
+
+//Define a custom freeing function for list items
+void osrfCustomListFree()
+{
+  freedItemsSize++;
+}
+
 //Set up the test fixture
 void setup(void)
 {
-  //Set up a list of size 10, add some items to test with
+  freedItemsSize = 0;
+  //Set up a list of size 10, define the freeing function, add some items to test with
   testOsrfList = osrfNewListSize(10);
+  testOsrfList->freeItem = (void(*)(void*)) osrfCustomListFree;
+
   int *item1 = 7;
   int *item3 = 15;
 
@@ -71,19 +83,25 @@ START_TEST(test_osrf_list_osrfListSet)
   fail_unless(osrfListGetIndex(testOsrfList, 4) == listItem, "osrfListSet is not assigning item pointer to the correct position");
   fail_unless(testOsrfList->size == 5, "osrfListSet should update a lists size after adding an item to that list");
 
-  //Adding an item to an exisiting, occupied position in the list
+  //Adding an item to an exisiting, occupied position in the list when there is a freeing function defined on the list
   int *listItem2 = 789;
-  fail_unless(osrfListSet(testOsrfList, listItem2, 4) == listItem, "Calling osrfListSet on an index that held a value should return the reference to that value");
+  fail_unless(osrfListSet(testOsrfList, listItem2, 4) == NULL, "Calling osrfListSet on an index that held a value, on a list that has a custom freeing function, should return NULL");
   fail_unless(osrfListGetIndex(testOsrfList, 4) == listItem2, "When called on a position that already has a value, osrfListSet should replace that value with the new item");
   fail_unless(testOsrfList->size == 5, "osrfListSet shouldn't update a lists size if the item is not added beyond the current size");
 
-  //Adding an item to a position outside of the current array size
+  //Adding an item to an exisiting, occupied position in the list when there is NOT a freeing function defined on the list
+  testOsrfList->freeItem = NULL;
+  int *listItem3 = 111;
+  fail_unless(osrfListSet(testOsrfList, listItem3, 4) == listItem2, "Calling osrfListSet on an index that held a value should return the reference to that value");
+  fail_unless(osrfListGetIndex(testOsrfList, 4) == listItem3, "When called on a position that already has a value, osrfListSet should replace that value with the new item");
+  fail_unless(testOsrfList->size == 5, "osrfListSet shouldn't update a lists size if the item is not added beyond the current size");
 
-  int *listItem3 = 444;
-  fail_unless(osrfListSet(testOsrfList, listItem3, 18) == NULL, "Calling osrfListSet on an empty index should return NULL, even if the index does not exist yet");
+  //Adding an item to a position outside of the current array size
+  int *listItem4 = 444;
+  fail_unless(osrfListSet(testOsrfList, listItem4, 18) == NULL, "Calling osrfListSet on an empty index should return NULL, even if the index does not exist yet");
   fail_unless(testOsrfList->arrsize == 266, "New arrsize should be 266 since it was 10 before, and grows in increments of 256 when expanded");
   fail_unless(testOsrfList->size == 19, "List should have a size value of 19");
-  fail_unless(osrfListGetIndex(testOsrfList, 18) == listItem3, "Value not added to correct index of list");
+  fail_unless(osrfListGetIndex(testOsrfList, 18) == listItem4, "Value not added to correct index of list");
 END_TEST
 
 START_TEST(test_osrf_list_osrfListGetIndex)
@@ -93,29 +111,130 @@ START_TEST(test_osrf_list_osrfListGetIndex)
 END_TEST
 
 START_TEST(test_osrf_list_osrfListFree)
+  //Set up a new list to be freed
+  osrfList *myList = osrfNewList();
+  myList->freeItem = (void(*)(void*)) osrfCustomListFree;
+  int *myListItem1 = 123;
+  int *myListItem2 = 456;
+  osrfListSet(myList, myListItem1, 0);
+  osrfListSet(myList, myListItem2, 1);
+  osrfListFree(myList);
+  fail_unless(freedItemsSize == 2, "osrfListFree should free each item in the list if there is a custom freeing function defined");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListClear)
+  //Set up a new list with items to be freed
+  osrfList *myList = osrfNewList();
+  myList->freeItem = (void(*)(void*)) osrfCustomListFree;
+  int *myListItem1 = 123;
+  int *myListItem2 = 456;
+  osrfListSet(myList, myListItem1, 0);
+  osrfListSet(myList, myListItem2, 1);
+  osrfListClear(myList);
+
+  fail_unless(freedItemsSize == 2, "osrfListClear should free each item in the list if there is a custom freeing function defined");
+  fail_unless(myList->arrlist[0] == NULL && myList->arrlist[1] == NULL, "osrfListClear should make all previously used slots in the list NULL");
+  fail_unless(myList->size == 0, "osrfListClear should set the list's size to 0");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListSwap)
+  //Prepare a second list to swap
+  osrfList *secondOsrfList = osrfNewListSize(7);
+  int *item2 = 8;
+  int *item3 = 16;
+  osrfListPush(secondOsrfList, NULL);
+  osrfListPush(secondOsrfList, item2);
+  osrfListPush(secondOsrfList, item3);
+
+  osrfListSwap(testOsrfList, secondOsrfList);
+  fail_unless(
+    osrfListGetIndex(testOsrfList, 0) == NULL &&
+    osrfListGetIndex(testOsrfList, 1) == 8 &&
+    osrfListGetIndex(testOsrfList, 2) == 16
+  );
+  fail_unless(
+    osrfListGetIndex(secondOsrfList, 0) == 7 &&
+    osrfListGetIndex(secondOsrfList, 1) == NULL &&
+    osrfListGetIndex(secondOsrfList, 2) == 15
+  );
 END_TEST
+
 START_TEST(test_osrf_list_osrfListRemove)
+  fail_unless(osrfListRemove(NULL, 2) == NULL, "osrfListRemove should return NULL when not given a list");
+  fail_unless(osrfListRemove(testOsrfList, 1000) == NULL, "osrfListRemove should return NULL when given a position exceeding the size of the list");
+  fail_unless(osrfListRemove(testOsrfList, 2) == NULL, "osrfListRemove should return NULL if there is a custom freeing function defined on the list");
+  fail_unless(osrfListGetIndex(testOsrfList, 2) == NULL, "osrfListRemove should remove the value from the list");
+  fail_unless(testOsrfList->size == 2, "osrfListRemove should adjust the size of the list if the last element is removed");
+  fail_unless(freedItemsSize == 1, "osrfListRemove should call a custom item freeing function if defined");
+  testOsrfList->freeItem = NULL;
+  fail_unless(osrfListRemove(testOsrfList, 0) == 7, "osrfListRemove should return the value that it has removed from the list if no custom freeing function is defined on the list");
+  fail_unless(osrfListGetIndex(testOsrfList, 0) == NULL, "osrfListRemove should remove the value from the list and make the position NULL");
+  fail_unless(testOsrfList->size == 2, "osrfListRemove should not touch the size of the list if it isn't removing the last element in the list");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListExtract)
+  fail_unless(osrfListExtract(NULL, 2) == NULL, "osrfListExtract should return NULL when not given a list");
+  fail_unless(osrfListExtract(testOsrfList, 1000) == NULL, "osrfListExtract should return NULL when given a position exceeding the size of the list");
+  fail_unless(osrfListExtract(testOsrfList, 2) == 15, "osrfListExtract should return the value that it has removed from the list");
+  fail_unless(osrfListGetIndex(testOsrfList, 2) == NULL, "osrfListExtract should remove the value from the list and make the position NULL");
+  fail_unless(testOsrfList->size == 2, "osrfListExtract should adjust the size of the list if the last element is removed");
+  fail_unless(osrfListExtract(testOsrfList, 0) == 7, "osrfListExtract should return the value that it has removed from the list");
+  fail_unless(osrfListGetIndex(testOsrfList, 0) == NULL, "osrfListExtract should remove the value from the list and make the position NULL");
+  fail_unless(testOsrfList->size == 2, "osrfListExtract should not touch the size of the list if it isn't removing the last element in the list");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListFind)
+  fail_unless(osrfListFind(NULL, 2) == -1, "osrfListFind should return -1 when not given a list");
+  fail_unless(osrfListFind(testOsrfList, NULL) == -1, "osrfListFind should return -1 when not given an addr");
+  fail_unless(osrfListFind(testOsrfList, 15) == 2, "osrfListFind should return the index where the first instance of addr is located");
+  fail_unless(osrfListFind(testOsrfList, 199) == -1, "osrfListFind should return -1 when the addr does not exist in the list");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListGetCount)
+  fail_unless(osrfListGetCount(NULL) == -1, "osrfListGetCount should return -1 when no list is given");
+  fail_unless(osrfListGetCount(testOsrfList) == 3, "osrfListGetCount should return list->size when given a list");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListPop)
+  fail_unless(osrfListPop(NULL) == NULL, "osrfListPop should return NULL when no list is given");
+  fail_unless(osrfListPop(testOsrfList) == NULL, "osrfListPop should return NULL if there is a custom freeing function defined on the list");
+  fail_unless(testOsrfList->arrlist[2] == NULL, "osrfListPop should remove the last item from the list");
+  testOsrfList->freeItem = NULL;
+  int *item = 10;
+  osrfListPush(testOsrfList, item);
+  fail_unless(osrfListPop(testOsrfList) == 10, "osrfListPop should return the last item from the list");
+  fail_unless(testOsrfList->arrlist[2] == NULL, "osrfListPop should remove the last item from the list");
 END_TEST
+
 START_TEST(test_osrf_list_osrfNewListIterator)
+  fail_unless(osrfNewListIterator(NULL) == NULL, "osrfNewListIterator should return NULL when no list is given");
+  osrfListIterator *testListItr = osrfNewListIterator(testOsrfList);
+  fail_if(testListItr == NULL, "osrfNewListIterator should create a osrfListIterator object");
+  fail_unless(testListItr->list == testOsrfList, "osrfNewListIterator should set the osrfListIterator->list attribute to the given list");
+  fail_unless(testListItr->current == 0, "osrfNewListIterator should set its current position to 0 by default");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListIteratorNext)
+  fail_unless(osrfListIteratorNext(NULL) == NULL, "osrfListIteratorNext should return NULL when no list given");
+  osrfListIterator *testListItr = osrfNewListIterator(testOsrfList);
+  fail_unless(osrfListIteratorNext(testListItr) == 7, "osrfListIteratorNext should return the value stored at the current index in the list, then increment");
+  fail_unless(osrfListIteratorNext(testListItr) == NULL, "osrfListIteratorNext should return the value stored at the current index in the list, then increment");
+  fail_unless(osrfListIteratorNext(testListItr) == 15, "osrfListIteratorNext should return the value stored at the current index in the list, then increment");
+  fail_unless(osrfListIteratorNext(testListItr) == NULL, "osrfListIteratorNext should return NULL when it reaches the end of the list");
+  testListItr->list == NULL;
+  fail_unless(osrfListIteratorNext(testListItr) == NULL, "osrfListIteratorNext should return NULL if osrfListIterator->list is NULL");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListIteratorFree)
 END_TEST
+
 START_TEST(test_osrf_list_osrfListIteratorReset)
+  osrfListIterator *testListItr = osrfNewListIterator(testOsrfList);
+  osrfListIteratorNext(testListItr);
+  osrfListIteratorReset(testListItr);
+  fail_unless(testListItr->current == 0, "osrfListIteratorReset should reset the iterator's current position to 0");
 END_TEST
+
 START_TEST(test_osrf_list_osrfListSetDefaultFree)
 END_TEST
 
@@ -135,6 +254,19 @@ Suite *osrf_list_suite(void)
   tcase_add_test(tc_core, test_osrf_list_osrfListPushFirst);
   tcase_add_test(tc_core, test_osrf_list_osrfListSet);
   tcase_add_test(tc_core, test_osrf_list_osrfListGetIndex);
+  tcase_add_test(tc_core, test_osrf_list_osrfListFree);
+  tcase_add_test(tc_core, test_osrf_list_osrfListClear);
+  tcase_add_test(tc_core, test_osrf_list_osrfListSwap);
+  tcase_add_test(tc_core, test_osrf_list_osrfListRemove);
+  tcase_add_test(tc_core, test_osrf_list_osrfListExtract);
+  tcase_add_test(tc_core, test_osrf_list_osrfListFind);
+  tcase_add_test(tc_core, test_osrf_list_osrfListGetCount);
+  tcase_add_test(tc_core, test_osrf_list_osrfListPop);
+  tcase_add_test(tc_core, test_osrf_list_osrfNewListIterator);
+  tcase_add_test(tc_core, test_osrf_list_osrfListIteratorNext);
+  tcase_add_test(tc_core, test_osrf_list_osrfListIteratorFree);
+  tcase_add_test(tc_core, test_osrf_list_osrfListIteratorReset);
+  tcase_add_test(tc_core, test_osrf_list_osrfListSetDefaultFree);
 
   //Add test case to test suite
   suite_add_tcase(s, tc_core);
