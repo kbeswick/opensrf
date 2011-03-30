@@ -21,6 +21,10 @@ void teardown(void)
 // Stub functions to simulate behavior of transport_session functions used in
 // transport_client.c (to isolate system under test)
 
+/*
+ * init_transport() returns a new transport_session object - just return an
+ * empty one for the purpose of testing transport_client
+*/
 transport_session* init_transport(const char* server, int port, 
     const char* unix_path, void* user_data, int component) {
 
@@ -28,9 +32,19 @@ transport_session* init_transport(const char* server, int port,
   return session;
 }
 
+/*
+ * va_list_to_string takes a format and any number of arguments, and returns
+ * a formatted string of those args. Its only used once here, return what is
+ * expected.
+*/
 char* va_list_to_string(const char* format, ...) {
   return "user@server/resource";
 }
+
+/* The rest of these functions return 1 or 0 depending on the result.
+ * The transport_client functions that call these are just wrappers, so the real
+ * testing should be done on transport_session.c
+*/
 
 int session_connect(transport_session* session, 
           const char* username, const char* password, 
@@ -69,21 +83,29 @@ int session_wait(transport_session* session, int timeout) {
 // BEGIN TESTS
 
 START_TEST(test_transport_client_init)
-  fail_unless(client_init(NULL, 1234, "some_path", 123) == NULL);
+  fail_unless(client_init(NULL, 1234, "some_path", 123) == NULL,
+      "When given a NULL client arg, client_init should return NULL");
   transport_client *test_client = client_init("server", 1234, "unixpath", 123);
-  fail_unless(test_client->msg_q_head == NULL);
-  fail_unless(test_client->msg_q_tail == NULL);
-  fail_if(test_client->session == NULL);
-  //fail_unless(test_client->session->message_callback == client_message_handler);
-  fail_unless(test_client->error == 0);
-  fail_unless(strcmp(test_client->host, "server") == 0);
-  fail_unless(test_client->xmpp_id == NULL);
+  fail_unless(test_client->msg_q_head == NULL,
+      "client->msg_q_head should be NULL on new client creation");
+  fail_unless(test_client->msg_q_tail == NULL,
+      "client->msg_q_tail should be NULL on new client creation");
+  fail_if(test_client->session == NULL,
+      "client->session should not be NULL - it is initialized by a call to init_transport");
+  //fail_unless(test_client->session->message_callback == client_message_handler,
+  //  "The default message_callback function should be client_message_handler");
+  fail_unless(test_client->error == 0, "client->error should be false on new client creation");
+  fail_unless(strcmp(test_client->host, "server") == 0, "client->host should be set to the host arg");
+  fail_unless(test_client->xmpp_id == NULL, "xmpp_id should be NULL on new client creation");
 END_TEST
 
 START_TEST(test_transport_client_connect)
-  fail_unless(client_connect(NULL, "user", "password", "resource", 10, AUTH_PLAIN) == 0);
-  fail_unless(client_connect(a_client, "user", "password", "resource", 10, AUTH_PLAIN) == 1);
-  fail_unless(a_client->xmpp_id == "user@server/resource");
+  fail_unless(client_connect(NULL, "user", "password", "resource", 10, AUTH_PLAIN) == 0,
+      "Passing a NULL client to client_connect should return a failure");
+  fail_unless(client_connect(a_client, "user", "password", "resource", 10, AUTH_PLAIN) == 1,
+      "A successful call to client_connect should return a 1, provided session_connect is successful");
+  fail_unless(strcmp(a_client->xmpp_id, "user@server/resource") == 0,
+      "A successful call to client_connect should set the correct xmpp_id in the client");
 END_TEST
 
 START_TEST(test_transport_client_disconnect)
