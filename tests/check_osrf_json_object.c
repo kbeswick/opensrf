@@ -125,7 +125,8 @@ START_TEST(test_osrf_json_object_jsonObjectToJSONRaw)
 
   jsonObjectSetKey(jsonHash, "key1", val1);
   jsonObjectSetKey(jsonHash, "key2", val2);
-  fail_unless(strcmp(jsonObjectToJSONRaw(jsonHash), "{\"key1\":\"value1\",\"key2\":\"value2\"}") == 0);
+  fail_unless(strcmp(jsonObjectToJSONRaw(jsonHash),
+        "{\"key1\":\"value1\",\"key2\":\"value2\"}") == 0);
 END_TEST
 
 START_TEST(test_osrf_json_object_jsonObjectToJSON)
@@ -136,16 +137,19 @@ START_TEST(test_osrf_json_object_jsonObjectToJSON)
 
   jsonObjectSetKey(jsonHash, "key1", val1);
   jsonObjectSetKey(jsonHash, "key2", val2);
-  fail_unless(strcmp(jsonObjectToJSON(jsonHash), "{\"key1\":{\"__c\":\"class1\",\"__p\":\"value1\"},\"key2\":{\"__c\":\"class2\",\"__p\":\"value2\"}}") == 0);
+  fail_unless(strcmp(jsonObjectToJSON(jsonHash),
+        "{\"key1\":{\"__c\":\"class1\",\"__p\":\"value1\"},\"key2\":{\"__c\":\"class2\",\"__p\":\"value2\"}}") == 0);
 END_TEST
 
 START_TEST(test_osrf_json_object_doubleToString)
-  fail_unless(strcmp(doubleToString(123.456), "123.456000000000003069544618484") == 0);
+  fail_unless(strcmp(doubleToString(123.456),
+        "123.456000000000003069544618484") == 0);
 END_TEST
 
 START_TEST(test_osrf_json_object_jsonObjectGetString)
   fail_unless(strcmp(jsonObjectGetString(jsonObj), "test") == 0);
-  fail_unless(strcmp(jsonObjectGetString(jsonNumber), "123.456000000000003069544618484") == 0);
+  fail_unless(strcmp(jsonObjectGetString(jsonNumber),
+        "123.456000000000003069544618484") == 0);
   jsonObject *jsonNullNumber = jsonNewNumberObject(0);
   jsonObjectSetNumberString(jsonNullNumber, "NaN"); //set jsonNullNumber->value to NULL
   fail_unless(strcmp(jsonObjectGetString(jsonNullNumber), "0") == 0);

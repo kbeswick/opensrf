@@ -32,9 +32,6 @@ Suite *osrf_stack_suite(void)
 
   //Add tests to test case
   tcase_add_test(tc_core, test_osrf_stack_process);
-//  tcase_add_test(tc_core, test_osrf_stack_transport_handler);
-//  tcase_add_test(tc_core, test_osrf_stack__do_client);
-//  tcase_add_test(tc_core, test_osrf_stack__do_server);
 
   //Add test case to test suite
   suite_add_tcase(s, tc_core);

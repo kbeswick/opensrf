@@ -42,8 +42,8 @@ char* va_list_to_string(const char* format, ...) {
 }
 
 /* The rest of these functions return 1 or 0 depending on the result.
- * The transport_client functions that call these are just wrappers, so the real
- * testing should be done on transport_session.c
+ * The transport_client functions that call these are just wrappers for
+ * functions in transport_session.c
 */
 
 int session_connect(transport_session* session, 
