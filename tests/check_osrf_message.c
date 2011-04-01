@@ -23,7 +23,7 @@ START_TEST(test_osrf_message_init)
 END_TEST
 
 START_TEST(test_osrf_message_get_last_locale)
-    fail_unless(osrf_message_get_last_locale()  == NULL);
+    fail_unless(osrf_message_get_last_locale() == NULL);
 END_TEST
 
 START_TEST(test_osrf_message_set_locale)
@@ -36,8 +36,10 @@ END_TEST
 
 START_TEST(test_osrf_message_set_default_locale)
   fail_unless(osrf_message_set_default_locale(NULL) == NULL);
-  fail_unless(osrf_message_set_default_locale("This string is longer than 16 characters for sure") == NULL);
-  fail_unless(strcmp(osrf_message_set_default_locale("fr-CA"), "fr-CA") == 0);
+  fail_unless(osrf_message_set_default_locale("This string is \
+        longer than 16 characters for sure") == NULL);
+  fail_unless(strcmp(osrf_message_set_default_locale("fr-CA"),
+        "fr-CA") == 0);
 END_TEST
 
 START_TEST(test_osrf_message_set_method)
