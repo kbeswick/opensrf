@@ -2,8 +2,10 @@ COMMON = testsuite.c
 OSRF_INC = $(top_srcdir)/include/opensrf
 AM_LDFLAGS = $(DEF_LDFLAGS) -R $(libdir)
 
-TESTS = check_osrf_message check_osrf_json_object check_osrf_list check_osrf_stack check_transport_client
-check_PROGRAMS = check_osrf_message check_osrf_json_object check_osrf_list check_osrf_stack check_transport_client
+TESTS = check_osrf_message check_osrf_json_object check_osrf_list check_osrf_stack check_transport_client \
+		check_transport_message
+check_PROGRAMS = check_osrf_message check_osrf_json_object check_osrf_list check_osrf_stack check_transport_client \
+				 check_transport_message
 
 check_osrf_message_SOURCES = $(COMMON) $(OSRF_INC)/osrf_message.h check_osrf_message.c
 check_osrf_message_CFLAGS = @CHECK_CFLAGS@ $(DEF_CFLAGS)
@@ -24,3 +26,7 @@ check_osrf_stack_LDADD = @CHECK_LIBS@ $(top_builddir)/src/libopensrf/libopensrf.
 check_transport_client_SOURCES = $(COMMON) $(OSRF_INC)/transport_client.h check_transport_client.c
 check_transport_client_CFLAGS = @CHECK_CFLAGS@ $(DEF_CFLAGS)
 check_transport_client_LDADD = @CHECK_LIBS@ $(top_builddir)/src/libopensrf/libopensrf.la
+
+check_transport_message_SOURCES = $(COMMON) $(OSRF_INC)/transport_message.h check_transport_message.c
+check_transport_message_CFLAGS = @CHECK_CFLAGS@ $(DEF_CFLAGS)
+check_transport_message_LDADD = @CHECK_LIBS@ $(top_builddir)/src/libopensrf/libopensrf.la
