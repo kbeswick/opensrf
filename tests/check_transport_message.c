@@ -66,8 +66,6 @@ START_TEST(test_transport_message_init_populated)
       "When calling message_init, a recipient arg should be stored in the recipient field");
   fail_unless(strcmp(a_message->sender, "sender") == 0,
       "When calling message_init, a sender arg should be stored in the sender field");
-
-  //TODO - Need to test for out of memory...?
 END_TEST
 
 START_TEST(test_transport_message_new_message_from_xml_empty)
@@ -162,7 +160,6 @@ START_TEST(test_transport_message_set_router_info_empty)
       "message_set_router_info should set msg->router_command to empty string if NULL router_command arg is passed");
   fail_unless(a_message->broadcast == 0,
       "message_set_router_info should set msg->broadcast to the content of the broadcast_enabled arg");
-  //TODO - test out of memory
 END_TEST
 
 START_TEST(test_transport_message_set_router_info_populated)
@@ -190,7 +187,24 @@ END_TEST
 START_TEST(test_transport_message_prepare_xml)
   fail_unless(message_prepare_xml(NULL) == 0,
       "Passing a NULL msg arg to message_prepare_xml should return 0");
-      //TODO - finish this...
+
+  transport_message *msg = message_init(NULL,NULL,NULL,NULL,NULL);
+  msg->msg_xml = "somevalue";
+  fail_unless(message_prepare_xml(msg) == 1,
+      "If msg->msg_xml is already populated, message_prepare_xml should return 1");
+
+  message_set_router_info(a_message, "routerfrom", "routerto", "routerclass", "routercommand", 1);
+  message_set_osrf_xid(a_message, "osrfxid");
+  set_msg_error(a_message, "errortype", 123);
+
+  fail_unless(message_prepare_xml(a_message) == 1,
+      "message_prepare_xml should return 1 upon success");
+  fail_if(a_message->msg_xml == NULL,
+      "message_prepare_xml should store the returned xml in msg->msg_xml");
+  fail_unless(strcmp(a_message->msg_xml, "<message to=\"recipient\" from=\"sender\" router_from=\"routerfrom\" router_to=\"routerto\" router_class=\"routerclass\" router_command=\"routercommand\" osrf_xid=\"osrfxid\" broadcast=\"1\"><error type=\"errortype\" code=\"123\"/><thread>thread</thread><subject>subject</subject><body>body</body></message>") == 0,
+      "message_prepare_xml should store the correct xml in msg->msg_xml");
+
+
 END_TEST
 
 START_TEST(test_transport_message_jid_get_username)
