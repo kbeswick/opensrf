@@ -4,27 +4,24 @@
 
 
 //Set up the test fixture
-void setup(void)
-{
+void setup(void){
 }
 
 //Clean up the test fixture
-void teardown(void)
-{
+void teardown(void){
 }
 
 // BEGIN TESTS
 
 START_TEST(test_osrf_stack_process)
   int *mr = 0;
-  fail_unless(osrf_stack_process(NULL, 10, mr) == -1);
-
+  fail_unless(osrf_stack_process(NULL, 10, mr) == -1,
+      "osrf_stack_process should return -1 if client arg is NULL");
 END_TEST
 
 //END TESTS
 
-Suite *osrf_stack_suite(void)
-{
+Suite *osrf_stack_suite(void) {
   //Create test suite, test case, initialize fixture
   Suite *s = suite_create("osrf_stack");
   TCase *tc_core = tcase_create("Core");
@@ -39,7 +36,6 @@ Suite *osrf_stack_suite(void)
   return s;
 }
 
-void run_tests(SRunner *sr)
-{
+void run_tests(SRunner *sr) {
   srunner_add_suite(sr, osrf_stack_suite());
 }

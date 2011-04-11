@@ -4,14 +4,12 @@
 transport_message *a_message; 
 
 //Set up the test fixture
-void setup(void)
-{
+void setup(void) {
   a_message = message_init("body", "subject", "thread", "recipient", "sender");
 }
 
 //Clean up the test fixture
-void teardown(void)
-{
+void teardown(void) {
   message_free(a_message);
 }
 
@@ -203,8 +201,6 @@ START_TEST(test_transport_message_prepare_xml)
       "message_prepare_xml should store the returned xml in msg->msg_xml");
   fail_unless(strcmp(a_message->msg_xml, "<message to=\"recipient\" from=\"sender\" router_from=\"routerfrom\" router_to=\"routerto\" router_class=\"routerclass\" router_command=\"routercommand\" osrf_xid=\"osrfxid\" broadcast=\"1\"><error type=\"errortype\" code=\"123\"/><thread>thread</thread><subject>subject</subject><body>body</body></message>") == 0,
       "message_prepare_xml should store the correct xml in msg->msg_xml");
-
-
 END_TEST
 
 START_TEST(test_transport_message_jid_get_username)
@@ -251,8 +247,7 @@ START_TEST(test_transport_message_set_msg_error)
 END_TEST
 //END TESTS
 
-Suite *transport_message_suite(void)
-{
+Suite *transport_message_suite(void) {
   //Create test suite, test case, initialize fixture
   Suite *s = suite_create("transport_message");
   TCase *tc_core = tcase_create("Core");
@@ -279,7 +274,6 @@ Suite *transport_message_suite(void)
   return s;
 }
 
-void run_tests(SRunner *sr)
-{
+void run_tests(SRunner *sr) {
   srunner_add_suite(sr, transport_message_suite());
 }

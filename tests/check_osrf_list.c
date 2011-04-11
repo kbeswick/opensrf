@@ -7,14 +7,12 @@ osrfList *testOsrfList;
 unsigned int freedItemsSize;
 
 //Define a custom freeing function for list items
-void osrfCustomListFree()
-{
+void osrfCustomListFree() {
   freedItemsSize++;
 }
 
 //Set up the test fixture
-void setup(void)
-{
+void setup(void) {
   freedItemsSize = 0;
   //Set up a list of size 10, define the freeing function, add some items to test with
   testOsrfList = osrfNewListSize(10);
@@ -29,8 +27,7 @@ void setup(void)
 }
 
 //Clean up the test fixture
-void teardown(void)
-{
+void teardown(void) {
   osrfListFree(testOsrfList);
 }
 
@@ -48,8 +45,7 @@ START_TEST(test_osrf_list_osrfNewListSize)
   fail_unless(smallList->arrsize == 5, "smallList wasn't created with the size 5");
   fail_unless(smallList->freeItem == NULL, "freeItem should be null by default");
   int i;
-  for (i = 0 ; i < smallList->arrsize ; i++)
-  {
+  for (i = 0 ; i < smallList->arrsize ; i++) {
     fail_if(smallList->arrlist[i] != NULL, "Every value in smallList->arrlist should be null");
   }
 
@@ -349,8 +345,7 @@ END_TEST
 
 //END TESTS
 
-Suite *osrf_list_suite(void)
-{
+Suite *osrf_list_suite(void) {
   //Create test suite, test case, initialize fixture
   Suite *s = suite_create("osrf_list");
   TCase *tc_core = tcase_create("Core");
@@ -383,7 +378,6 @@ Suite *osrf_list_suite(void)
   return s;
 }
 
-void run_tests(SRunner *sr)
-{
+void run_tests(SRunner *sr) {
   srunner_add_suite(sr, osrf_list_suite());
 }
