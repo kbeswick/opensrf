@@ -2,14 +2,16 @@ dojo.provide('opensrf.tests.testosrfMethod');
 
 dojo.require('opensrf.opensrf', true);
 
+var setupFunc = (function() {
+    var h = { method: "someMethod" };
+    this.osrfmethod = new osrfMethod(h);
+});
+
 doh.register("osrfMethodTests", [
 //Begin Tests
 {
   name: "osrfMethodCreateTest",
-  setUp: function() {
-    var h = { method: "someMethod" };
-    this.osrfmethod = new osrfMethod(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmethod);
     doh.assertTrue(this.osrfmethod.hash);
@@ -20,10 +22,7 @@ doh.register("osrfMethodTests", [
 
 {
   name: "osrfMethod_methodTest",
-  setUp: function() {
-    var h = { method: "someMethod" };
-    this.osrfmethod = new osrfMethod(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmethod.method("otherMethod") === "otherMethod");
     doh.assertTrue(this.osrfmethod.hash.method === "otherMethod");
@@ -33,10 +32,7 @@ doh.register("osrfMethodTests", [
 
 {
   name: "osrfMethod_paramsTest",
-  setUp: function() {
-    var h = { method: "someMethod" };
-    this.osrfmethod = new osrfMethod(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmethod.params("param1") === "param1");
     doh.assertTrue(this.osrfmethod.hash.params === "param1");

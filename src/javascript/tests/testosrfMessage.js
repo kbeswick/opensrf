@@ -2,14 +2,16 @@ dojo.provide('opensrf.tests.testosrfMessage');
 
 dojo.require('opensrf.opensrf', true);
 
+var setupFunc = (function() {
+  var h = { locale: "" };
+  this.osrfmsg = new osrfMessage(h);
+});
+
 doh.register("osrfMessageTests", [
 //Begin Tests
 {
   name: "osrfMessageCreateTest",
-  setUp: function() {
-    var h = { locale: "" };
-    this.osrfmsg = new osrfMessage(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmsg.hash.locale === 'en-US');
     doh.assertTrue(this.osrfmsg._encodehash);
@@ -18,10 +20,7 @@ doh.register("osrfMessageTests", [
 
 {
   name: "osrfMessage_threadTraceTest",
-  setUp: function() {
-    var h = { locale: "" };
-    this.osrfmsg = new osrfMessage(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmsg.threadTrace() == undefined);
     doh.assertTrue(this.osrfmsg.threadTrace("abc") === "abc");
@@ -32,10 +31,7 @@ doh.register("osrfMessageTests", [
 
 {
   name: "osrfMessage_typeTest",
-  setUp: function() {
-    var h = { locale: "" };
-    this.osrfmsg = new osrfMessage(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmsg.type() == undefined);
     doh.assertTrue(this.osrfmsg.type("type") === "type");
@@ -46,10 +42,7 @@ doh.register("osrfMessageTests", [
 
 {
   name: "osrfMessage_payloadTest",
-  setUp: function() {
-    var h = { locale: "" };
-    this.osrfmsg = new osrfMessage(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmsg.payload() == undefined);
     doh.assertTrue(this.osrfmsg.payload("pay") === "pay");
@@ -60,10 +53,7 @@ doh.register("osrfMessageTests", [
 
 {
   name: "osrfMessage_localeTest",
-  setUp: function() {
-    var h = { locale: "" };
-    this.osrfmsg = new osrfMessage(h);
-  },
+  setUp: setupFunc,
   runTest: function() {
     doh.assertTrue(this.osrfmsg.locale() == "en-US");
     doh.assertTrue(this.osrfmsg.locale("fr-CA") === "fr-CA");
