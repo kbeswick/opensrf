@@ -10,6 +10,7 @@ try{
 	dojo.require("opensrf.tests.testosrfResult");
 	dojo.require("opensrf.tests.testosrfServerError");
 	dojo.require("opensrf.tests.testosrfContinueStatus");
+	dojo.require("opensrf.tests.testOpenSRFSession");
 
 }catch(e){
 	doh.debug(e);
