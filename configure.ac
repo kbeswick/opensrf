@@ -295,7 +295,7 @@ if test "x$OSRF_INSTALL_CORE" = "xtrue"; then
 	AC_SUBST(memcached_LIBS)
 
     # Check Unit test framework
-    PKG_CHECK_MODULES([CHECK], [check >= 0.9.0], [enable_tests=yes],
+    PKG_CHECK_MODULES([Check], [check >= 0.9.0], [enable_tests=yes],
                       [enable_tests=no])
     AM_CONDITIONAL(CHECK_TESTS, test x$enable_tests = xyes)
 
