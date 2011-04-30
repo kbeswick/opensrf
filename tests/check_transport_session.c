@@ -1,6 +1,13 @@
 #include <check.h>
 #include "opensrf/transport_session.h"
 
+#define JABBER_BODY_BUFSIZE    4096  /**< buffer size for message body */
+#define JABBER_SUBJECT_BUFSIZE   64  /**< buffer size for message subject */
+#define JABBER_THREAD_BUFSIZE    64  /**< buffer size for message thread */
+#define JABBER_JID_BUFSIZE       64  /**< buffer size for various ids */
+#define JABBER_STATUS_BUFSIZE    16  /**< buffer size for status code */
+
+
 void setup(void) {
 }
 
@@ -42,7 +49,7 @@ START_TEST(test_transport_session_init_transport_empty)
   fail_if(empty_tsession == NULL, "init_transport should create a transport_session object");
   fail_unless(empty_tsession->user_data == NULL,
       "should populate transport_session->user_data with value of user_data arg");
-  fail_unless(empty_tsession->component == NULL.
+  fail_unless(empty_tsession->component == NULL,
       "should populate transport_session->component with value of component arg");
 
   //data buffers
@@ -82,27 +89,27 @@ START_TEST(test_transport_session_init_transport_empty)
   //jabber state machine
   fail_if(empty_tsession->state_machine == NULL,
       "init_transport should create a state_machine in the transport_session");
-  fail_unless(empty_tsession->state_machine->connected == 0, 
+  fail_unless(empty_tsession->state_machine->connected == 0,
       "default value for transport_session->state_machine->connected is 0");
-  fail_unless(empty_tsession->state_machine->connecting == 0, 
+  fail_unless(empty_tsession->state_machine->connecting == 0,
       "default value for transport_session->state_machine->connecting is 0");
-  fail_unless(empty_tsession->state_machine->in_message == 0, 
+  fail_unless(empty_tsession->state_machine->in_message == 0,
       "default value for transport_session->state_machine->in_message is 0");
-  fail_unless(empty_tsession->state_machine->in_message_body == 0, 
+  fail_unless(empty_tsession->state_machine->in_message_body == 0,
       "default value for transport_session->state_machine->in_message_body is 0");
-  fail_unless(empty_tsession->state_machine->in_thread == 0, 
+  fail_unless(empty_tsession->state_machine->in_thread == 0,
       "default value for transport_session->state_machine->in_thread is 0");
-  fail_unless(empty_tsession->state_machine->in_subject == 0, 
+  fail_unless(empty_tsession->state_machine->in_subject == 0,
       "default value for transport_session->state_machine->in_subject is 0");
-  fail_unless(empty_tsession->state_machine->in_error == 0, 
+  fail_unless(empty_tsession->state_machine->in_error == 0,
       "default value for transport_session->state_machine->in_error is 0");
-  fail_unless(empty_tsession->state_machine->in_message_error == 0, 
+  fail_unless(empty_tsession->state_machine->in_message_error == 0,
       "default value for transport_session->state_machine->in_message_error is 0");
-  fail_unless(empty_tsession->state_machine->in_iq == 0, 
+  fail_unless(empty_tsession->state_machine->in_iq == 0,
       "default value for transport_session->state_machine->in_iq is 0");
-  fail_unless(empty_tsession->state_machine->in_presence == 0, 
+  fail_unless(empty_tsession->state_machine->in_presence == 0,
       "default value for transport_session->state_machine->in_presence is 0");
-  fail_unless(empty_tsession->state_machine->in_status == 0, 
+  fail_unless(empty_tsession->state_machine->in_status == 0,
       "default value for transport_session->state_machine->in_status is 0");
 
   fail_if(empty_tsession->parser_ctxt == NULL,
@@ -187,7 +194,7 @@ START_TEST(test_transport_session_send_msg)
 
   fail_unless(session_send_msg(NULL, NULL) == -1,
       "session_send_msg should return -1 when no session arg is passed");
-  fail_unless(sessin_send_msg(ses, msg) == -1,
+  fail_unless(session_send_msg(ses, msg) == -1,
       "session_send_msg should return -1 when jabber state machine is not connected");
   ses->state_machine->connected = 1;
   fail_unless(session_send_msg(ses, msg) == -1,
@@ -200,18 +207,18 @@ END_TEST
 START_TEST(test_transport_session_connect)
   transport_session *ses = init_transport("server", 0, NULL, "user", 1);
   ses->sock_id = 1;
-  fail_unless(session_connect(NULL, NULL, NULL, NULL, NULL, NULL) == 0,
+  fail_unless(session_connect(NULL, NULL, NULL, NULL, NULL, AUTH_PLAIN) == 0,
       "session_connect should return 0 if no session is given");
-  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, NULL) == 0,
+  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, AUTH_PLAIN) == 0,
       "session_connect should return 0 if ses->sock_id is non 0");
   ses->sock_id = 0;
-  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, NULL) == 0,
+  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, AUTH_PLAIN) == 0,
       "session_connect should return 0 if no port or unix path are given");
   ses->unix_path = "invalid_path";
-  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, NULL) == 0,
+  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, AUTH_PLAIN) == 0,
       "session_connect should return 0 if the call to socket_open_unix_client fails");
   ses->port = 9999;
-  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, NULL) == 0,
+  fail_unless(session_connect(ses, NULL, NULL, NULL, NULL, AUTH_PLAIN) == 0,
       "session_connect should return 0 if the call to socket_open_tcp_client fails");
 END_TEST
 
@@ -223,7 +230,15 @@ Suite *transport_session_suite(void) {
   tcase_add_checked_fixture(tc_core, setup, teardown);
 
   //Add tests to test case
-  tcase_add_test(tc_core, test_transport_session_whatever);
+  tcase_add_test(tc_core, test_transport_session_init_transport_empty);
+  tcase_add_test(tc_core, test_transport_session_init_transport_populated);
+  tcase_add_test(tc_core, test_transport_session_free);
+  tcase_add_test(tc_core, test_transport_session_discard);
+  tcase_add_test(tc_core, test_transport_session_connected);
+  tcase_add_test(tc_core, test_transport_session_wait);
+  tcase_add_test(tc_core, test_transport_session_send_msg);
+  tcase_add_test(tc_core, test_transport_session_connect);
+
 
   suite_add_tcase(s, tc_core);
 
@@ -231,5 +246,5 @@ Suite *transport_session_suite(void) {
 }
 
 void run_tests(SRunner *sr) {
-  srunner_add_suite(sr, transport_client_suite());
+  srunner_add_suite(sr, transport_session_suite());
 }
